@@ -43,6 +43,7 @@
 
   <ItemGroup>
     <!-- SourceLink -->
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <!-- Optional analyzers (nice for consistency) -->
     <PackageReference Include="Roslynator.Analyzers" Version="4.12.0" PrivateAssets="All" />
@@ -50,10 +51,7 @@
 
   <ItemGroup>
     <!-- Bring README from repo root into the project and the nupkg root -->
-    <None Include="$(MSBuildProjectDirectory)\..\README.md"
-          Pack="true"
-          PackagePath=""
-          Link="README.md" />
+    <None Include="$(MSBuildProjectDirectory)\..\README.md" Pack="true" PackagePath="" Link="README.md" />
     <!-- If you have a LICENSE in repo root, do the same:
     <None Include="$(MSBuildProjectDirectory)\..\LICENSE"
           Pack="true"
