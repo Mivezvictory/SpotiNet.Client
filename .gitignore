@@ -1,0 +1,26 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+*.pdb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vshost.*
+*.vspscc
+*.scc
+_Resharper.*/
+*.DotSettings
+.idea/
+.vs/
+ReSharper/
+
+# Visual Studio Code
+.vscode/
+# Exclude specific VS Code files if you don't want them versioned (e.g., user settings)
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
