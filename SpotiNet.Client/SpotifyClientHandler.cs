@@ -1,8 +1,14 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace SpotiNet.Client;
 
+/// <summary>
+/// 
+/// </summary>
 public static class SpotifyClientHandler
 {
     private static readonly HttpClient _http = new HttpClient();
@@ -28,7 +34,13 @@ public static class SpotifyClientHandler
             logger.LogError("Spotify GET {Url} failed: {Status} {Body}", url, res.StatusCode, body);
             throw new InvalidOperationException("Spotify API request failed.");
         }
-        return JsonSerializer.Deserialize<T>(body, _json);
+        var result = JsonSerializer.Deserialize<T>(body, _json);
+        if (result == null)
+        {
+            logger.LogError("Deserialization failed for Spotify response: {Body}", body);
+            throw new InvalidOperationException("Failed to deserialize Spotify API response.");
+        }
+        return result;
 
     }
 
@@ -38,6 +50,7 @@ public static class SpotifyClientHandler
         {
             "get" => HttpMethod.Get,
             "post" => HttpMethod.Post,
+            _ => throw new ArgumentException($"Unsupported HTTP method: {method}")
         };
     }
 }

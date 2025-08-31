@@ -1,63 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <!-- Target framework(s) -->
-    <TargetFramework>net8.0</TargetFramework>
-    <!-- For broader reuse you can multi-target:
-    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
-    -->
+    <!-- Target more than one TF to maximize compatibility -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
 
-    <!-- Build quality -->
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-
-    <!-- NuGet package metadata -->
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <!-- Package identity -->
     <PackageId>SpotiNet.Client</PackageId>
     <Version>0.1.0</Version>
-    <Authors>Mivezvictory</Authors>
-    <Company>Mivezvictory</Company>
-    <Description>Client utilities for SpotiNet integrations.</Description>
-    <PackageTags>spotify;client;sdk;spotinet</PackageTags>
+    <Authors>Miyen-Ebi Iyakoregha</Authors>
+    <Description>Lightweight Spotify Web API helper for typed JSON calls with logging.</Description>
+    <PackageTags>spotify;spotify-web-api;httpclient;json</PackageTags>
 
-    <!-- README: we link the file that lives one folder up -->
+    <!-- Links -->
+    <RepositoryUrl>https://github.com/Mivezvictory/SpotiNet.Client</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Mivezvictory/SpotiNet.Client</PackageProjectUrl>
+
+    <!-- Compliance/visuals -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- License: pick ONE of these options -->
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!-- Or, if you keep a LICENSE file at repo root, also link it like README and use:
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    -->
+    <!-- Nice-to-haves for consumers -->
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Repo metadata + SourceLink -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <RepositoryUrl>https://github.com/Mivezvictory/SpotiNet.Client.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <!-- Symbols & SourceLink -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SourceLink -->
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
+    <!-- Ensure these files are actually packed -->
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+   
+    <!-- Dependencies explicitly listed for clarity -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <!-- Optional analyzers (nice for consistency) -->
-    <PackageReference Include="Roslynator.Analyzers" Version="4.12.0" PrivateAssets="All" />
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
   </ItemGroup>
-
-  <ItemGroup>
-    <!-- Bring README from repo root into the project and the nupkg root -->
-    <None Include="$(MSBuildProjectDirectory)\..\README.md" Pack="true" PackagePath="" Link="README.md" />
-    <!-- If you have a LICENSE in repo root, do the same:
-    <None Include="$(MSBuildProjectDirectory)\..\LICENSE"
-          Pack="true"
-          PackagePath=""
-          Link="LICENSE" />
-    -->
-  </ItemGroup>
-
 </Project>

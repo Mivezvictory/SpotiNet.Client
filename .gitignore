@@ -16,7 +16,9 @@ _Resharper.*/
 .idea/
 .vs/
 ReSharper/
-
+.nupkgs
+nupkgs
+.DS_Store
 # Visual Studio Code
 .vscode/
 # Exclude specific VS Code files if you don't want them versioned (e.g., user settings)
