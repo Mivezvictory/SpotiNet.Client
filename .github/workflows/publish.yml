@@ -1,71 +1,59 @@
-name: publish-nuget (release-guarded)
+name: "publish-nuget (release-guarded)"
 
 on:
   release:
-    types: [published]   # Runs when a GitHub Release is published
+    types: [published]
 
 env:
-  PROJECT_FILE: SpotiNet.Client/SpotiNet.Client.csproj   # ← update if needed
+  PROJECT_FILE: SpotiNet.Client/SpotiNet.Client.csproj
   NUGET_SOURCE: https://api.nuget.org/v3/index.json
 
 jobs:
   pack-and-push:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            8.0.x
+          dotnet-version: '8.0.x'
 
       - name: Show release tag
-        run: echo "Release tag: ${{ github.event.release.tag_name }}"
+        run: echo Release tag: ${{ github.event.release.tag_name }}
 
       - name: Verify tag matches csproj version
         shell: bash
         run: |
           set -euo pipefail
-
           TAG="${{ github.event.release.tag_name }}"
-          TAG="${TAG#v}"  # strip leading "v" if present (v1.2.3 -> 1.2.3)
+          TAG="${TAG#v}"  # strip leading "v" if present
 
           if [ ! -f "$PROJECT_FILE" ]; then
             echo "PROJECT_FILE not found: $PROJECT_FILE"
             exit 1
           fi
 
-          # Extract <Version> or <VersionPrefix> (simple XML scrape good enough for CI)
-          CSVER=$(sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' "$PROJECT_FILE" | head -n1)
+          # Try <Version>, then <VersionPrefix>
+          CSVER=$(grep -oPm1 "(?<=<Version>)[^<]+" "$PROJECT_FILE" || true)
           if [ -z "$CSVER" ]; then
-            CSVER=$(sed -n 's/.*<VersionPrefix>\(.*\)<\/VersionPrefix>.*/\1/p' "$PROJECT_FILE" | head -n1)
+            CSVER=$(grep -oPm1 "(?<=<VersionPrefix>)[^<]+" "$PROJECT_FILE" || true)
           fi
 
           if [ -z "$CSVER" ]; then
-            echo "Could not find <Version> or <VersionPrefix> in $PROJECT_FILE"
+            echo "::error::No <Version> or <VersionPrefix> found in $PROJECT_FILE"
             exit 1
           fi
 
-          echo "Tag version:      $TAG"
-          echo "csproj version:   $CSVER"
+          echo "Tag version: $TAG"
+          echo "csproj version: $CSVER"
 
           if [ "$TAG" != "$CSVER" ]; then
             echo "::error::Release tag ($TAG) does not match csproj version ($CSVER)."
-            echo "Fix: either bump <Version> in the csproj to $TAG or re-tag the release to v$CSVER."
+            echo "Fix: bump <Version> in the csproj to $TAG or re-tag the release to v$CSVER."
             exit 1
           fi
 
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build (Release)
-        run: dotnet build $PROJECT_FILE -c Release --no-restore
-
-      - name: Pack (Release)
-        run: dotnet pack $PROJECT_FILE -c Release --no-build -o ./.nupkgs
-
-      - name: Push to nuget.org
-        run: dotnet nuget push "./.nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source $NUGET_SOURCE --skip-duplicate
+      - run: dotnet restore
+      - run: dotnet build "$PROJECT_FILE" -c Release --no-restore
+      - run: dotnet pack "$PROJECT_FILE" -c Release --no-build -o ./.nupkgs
+      - run: dotnet nuget push "./.nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source $NUGET_SOURCE --skip-duplicate
