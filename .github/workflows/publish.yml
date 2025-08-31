@@ -1,4 +1,4 @@
-name: "publish-nuget (release-guarded)"
+name: publish-nuget (release-guarded)
 
 on:
   release:
@@ -12,48 +12,51 @@ jobs:
   pack-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Show release tag
-        run: echo Release tag: ${{ github.event.release.tag_name }}
+        run: |
+          echo "Release tag: ${{ github.event.release.tag_name }}"
 
       - name: Verify tag matches csproj version
         shell: bash
         run: |
           set -euo pipefail
           TAG="${{ github.event.release.tag_name }}"
-          TAG="${TAG#v}"  # strip leading "v" if present
-
+          TAG="${TAG#v}"  # strip leading v
           if [ ! -f "$PROJECT_FILE" ]; then
             echo "PROJECT_FILE not found: $PROJECT_FILE"
             exit 1
           fi
-
-          # Try <Version>, then <VersionPrefix>
           CSVER=$(grep -oPm1 "(?<=<Version>)[^<]+" "$PROJECT_FILE" || true)
           if [ -z "$CSVER" ]; then
             CSVER=$(grep -oPm1 "(?<=<VersionPrefix>)[^<]+" "$PROJECT_FILE" || true)
           fi
-
           if [ -z "$CSVER" ]; then
             echo "::error::No <Version> or <VersionPrefix> found in $PROJECT_FILE"
             exit 1
           fi
-
           echo "Tag version: $TAG"
           echo "csproj version: $CSVER"
-
           if [ "$TAG" != "$CSVER" ]; then
             echo "::error::Release tag ($TAG) does not match csproj version ($CSVER)."
-            echo "Fix: bump <Version> in the csproj to $TAG or re-tag the release to v$CSVER."
             exit 1
           fi
 
-      - run: dotnet restore
-      - run: dotnet build "$PROJECT_FILE" -c Release --no-restore
-      - run: dotnet pack "$PROJECT_FILE" -c Release --no-build -o ./.nupkgs
-      - run: dotnet nuget push "./.nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source $NUGET_SOURCE --skip-duplicate
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build "$PROJECT_FILE" -c Release --no-restore
+
+      - name: Pack (Release)
+        run: dotnet pack "$PROJECT_FILE" -c Release --no-build -o ./.nupkgs
+
+      - name: Push to nuget.org
+        run: dotnet nuget push "./.nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source $NUGET_SOURCE --skip-duplicate
