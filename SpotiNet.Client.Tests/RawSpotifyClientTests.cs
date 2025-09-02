@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions; // <-- for NullLogger<T>
 using Microsoft.Extensions.Options;
 using SpotiNet.Client;
 using Xunit;
@@ -23,7 +24,9 @@ public class RawSpotifyClientTests
 
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.spotify.com/v1/") };
         var options = Options.Create(new SpotifyClientOptions());
-        var client = new RawSpotifyClient(http, options);
+        var logger = NullLogger<RawSpotifyClient>.Instance;
+
+        var client = new RawSpotifyClient(http, options, logger);
 
         // Act
         var doc = await client.GetAsync<JsonDocument>("artists/anything");
