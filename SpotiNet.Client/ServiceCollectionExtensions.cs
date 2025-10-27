@@ -47,14 +47,20 @@ public static class ServiceCollectionExtensions
         // HTTP pipeline
         services.AddTransient<AuthDelegatingHandler>();
 
+
+        services.AddSingleton<IRetryDelayStrategy, DefaultRetyDelayStrategy>();
+        services.AddTransient<AuthDelegatingHandler>();
+        services.AddTransient<RetryAfterDelegatingHandler>();
+
         services.AddHttpClient<RawSpotifyClient>((sp, http) =>
         {
             var opts = sp.GetRequiredService<IOptions<SpotifyClientOptions>>().Value;
             http.BaseAddress = new Uri(opts.BaseUrl, UriKind.Absolute);
             http.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddHttpMessageHandler<AuthDelegatingHandler>();
-
+        .AddHttpMessageHandler<AuthDelegatingHandler>()
+        .AddHttpMessageHandler<RetryAfterDelegatingHandler>();
+        
         return services;
     }
 }
