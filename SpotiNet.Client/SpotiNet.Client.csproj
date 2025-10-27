@@ -29,6 +29,9 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SpotiNet.Client.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Ensure these files are actually packed -->
