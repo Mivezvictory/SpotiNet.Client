@@ -11,6 +11,11 @@ env:
 jobs:
   pack-and-push:
     runs-on: ubuntu-latest
+    env:
+      # Prefer resolving expressions to env once, then use $RELEASE_TAG in bash
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      # Fallback: github.ref_name is the tag name on release events too
+      REF_TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,18 +25,43 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Show release tag
+      # Debug the event payload (helps if tag looks empty)
+      - name: Show raw release payload and resolved tags
+        shell: bash
         run: |
-          echo "Release tag: ${{ github.event.release.tag_name }}"
+          set -euo pipefail
+          echo "Resolved RELEASE_TAG: '${RELEASE_TAG}'"
+          echo "Resolved REF_TAG: '${REF_TAG}'"
+          echo "Event name: '${{ github.event_name }}'"
+          echo "Ref type:  '${{ github.ref_type }}'"
+          echo "Ref name:  '${{ github.ref_name }}'"
+          echo "Full event JSON (release subset):"
+          echo '${{ toJson(github.event.release) }}'
+
+      - name: Pick tag (prefer release.tag_name, fallback to ref_name)
+        id: picktag
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${RELEASE_TAG:-}"
+          if [ -z "$TAG" ]; then
+            TAG="${REF_TAG:-}"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::Could not resolve a tag name from the event."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Using tag: $TAG"
 
       - name: Verify tag matches csproj version
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${{ github.event.release.tag_name }}"
+          TAG='${{ steps.picktag.outputs.tag }}'
           TAG="${TAG#v}"  # strip leading v
           if [ ! -f "$PROJECT_FILE" ]; then
-            echo "PROJECT_FILE not found: $PROJECT_FILE"
+            echo "::error::PROJECT_FILE not found: $PROJECT_FILE"
             exit 1
           fi
           CSVER=$(grep -oPm1 "(?<=<Version>)[^<]+" "$PROJECT_FILE" || true)
