@@ -36,7 +36,6 @@ jobs:
           echo "Ref type:  '${{ github.ref_type }}'"
           echo "Ref name:  '${{ github.ref_name }}'"
           echo "Full event JSON (release subset):"
-          echo "Full event JSON (release subset):"
           jq '.release' "$GITHUB_EVENT_PATH" || true
 
       - name: Pick tag (prefer release.tag_name, fallback to ref_name)
