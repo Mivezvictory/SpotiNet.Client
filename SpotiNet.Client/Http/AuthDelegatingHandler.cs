@@ -12,13 +12,13 @@ internal sealed class AuthDelegatingHandler : DelegatingHandler
     /// using an <see cref="SpotiNet.Client.IAccessTokenProvider"/>.
     /// Also sets <c>Accept: application/json</c>.
     /// </summary>
-    private readonly SpotiNet.Client.IAccessTokenProvider _tokenProvider;
+    private readonly IAccessTokenProvider _tokenProvider;
 
     /// <summary>
     /// Initializes a new instance of <see cref="AuthDelegatingHandler"/>.
     /// </summary>
     /// <param name="tokenProvider">Provider used to obtain access tokens.</param>
-    public AuthDelegatingHandler(SpotiNet.Client.IAccessTokenProvider tokenProvider) => _tokenProvider = tokenProvider;
+    public AuthDelegatingHandler(IAccessTokenProvider tokenProvider) => _tokenProvider = tokenProvider;
 
     /// <summary>
     /// Adds the bearer token to the outgoing request before sending it.
