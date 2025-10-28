@@ -45,9 +45,6 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IAccessTokenProvider>(_ => new EnvVarAccessTokenProvider("SPOTIFY_ACCESS_TOKEN"));
 
         // HTTP pipeline
-        services.AddTransient<AuthDelegatingHandler>();
-
-
         services.AddSingleton<IRetryDelayStrategy, DefaultRetyDelayStrategy>();
         services.AddTransient<AuthDelegatingHandler>();
         services.AddTransient<RetryAfterDelegatingHandler>();
@@ -60,6 +57,17 @@ public static class ServiceCollectionExtensions
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>()
         .AddHttpMessageHandler<RetryAfterDelegatingHandler>();
+        
+        services.AddHttpClient<SpotifyClient>((sp, http) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<SpotifyClientOptions>>().Value;
+            http.BaseAddress = new Uri(opts.BaseUrl, UriKind.Absolute);
+            http.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .AddHttpMessageHandler<AuthDelegatingHandler>()
+        .AddHttpMessageHandler<RetryAfterDelegatingHandler>();
+
+        services.AddScoped<ISpotifyClient, SpotifyClient>();
         
         return services;
     }

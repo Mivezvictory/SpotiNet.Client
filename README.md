@@ -1,27 +1,82 @@
-SpotiNet.Client
-===============
+## Version 0.2.0
 
-> Lightweight .NET client for typed Spotify Web API calls (**unofficial**).
+**What’s included**
+- DI-first client with retries for `429` (honors `Retry-After`) + basic `5xx`
+- Typed APIs:
+  - `Users.GetMeAsync()`
+  - `Playlists.CreateAsync(userId, name, description?, isPublic?)`
+  - `Playlists.AddItemsAsync(playlistId, IEnumerable<string> trackUris)`
+- Clean errors via `SpotifyApiException` (status + message + raw body)
 
-SpotiNet.Client is a minimal C# helper for calling Spotify Web API endpoints and getting strongly-typed JSON back. It exposes a single generic entry point---so you can focus on your models, not plumbing.
+**Tokens & scopes**
+- These endpoints require a **user access token** (not client-credentials).
+- Scopes:
+    - `Users.GetMeAsync`: none for basic profile (add `user-read-email` if you need email)
+    - `Playlists.CreateAsync` / `AddItemsAsync`: `playlist-modify-public` or `playlist-modify-private` (match `isPublic`)
 
-Signature
----------
+### Install
 
-`public static async Task<T> GetSpotifyResponseJson<T>(  string url,
-    string token,
-    string method,
-    ILogger logger)`
+```bash
+dotnet add package SpotiNet.Client
+```
 
-Features
---------
+**Register**
+```csharp
+    using SpotiNet.Client;
 
--   Bearer authentication
+    builder.Services.AddSpotifyClient(); // reads token from env var SPOTIFY_ACCESS_TOKEN by default
 
--   HTTP verbs (`GET`, `POST`, etc.)
+```
+`Provide your own token source by implementing IAccessTokenProvider and passing a factory to AddSpotifyClient(...).`
 
--   Structured logging via `ILogger`
 
--   JSON deserialization into `T`
+**Minimal usage (create playlist + add tracks)**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
 
-> **Note:** This project is not affiliated with or endorsed by Spotify.
+// 1) Who am I?
+var me = await api.Users.GetMeAsync();
+Console.WriteLine($"Hello, {me.DisplayName} ({me.Id})");
+
+// 2) Create a playlist
+var playlist = await api.Playlists.CreateAsync(me.Id, "SpotiNet Test", "Created via SpotiNet.Client", isPublic: false);
+
+// 3) Add tracks
+await api.Playlists.AddItemsAsync(playlist.Id, new[]
+{
+    "spotify:track:5BLrEOEDKoDDg5T8PzdIHN",
+    "spotify:track:77Ie9frENeQwYUGHrrS0pk"
+});
+
+Console.WriteLine($"Playlist created: {playlist.Name} ({playlist.Id})");
+
+```
+
+**Supplying a user token**
+```bash
+# Powershell
+$env:SPOTIFY_ACCESS_TOKEN="eyJhbGciOi..."
+
+# bash/zsh
+export SPOTIFY_ACCESS_TOKEN="eyJhbGciOi..."
+```
+
+**Or implement:**
+```csharp
+public sealed class MyUserTokenProvider : IAccessTokenProvider
+{
+    public Task<string> GetAccessTokenAsync(CancellationToken ct=default)
+        => Task.FromResult(GetFromMyAuthSystem());
+}
+
+// Registration:
+services.AddSpotifyClient(tokenProviderFactory: _ => new MyUserTokenProvider());
+```
+
+**Errors**
+
+Non-2xx results throw SpotifyApiException:
+
+- StatusCode (e.g., 401, 403, 429)
+- Message (Spotify’s error.message when available)
+-  ResponseBody (raw response)
