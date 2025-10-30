@@ -1,7 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using SpotiNet.Client.Auth;
 using SpotiNet.Client.Http;
 
 namespace SpotiNet.Client;
@@ -38,17 +37,16 @@ public static class ServiceCollectionExtensions
     {
         if (configure != null) services.Configure(configure);
 
-        // Token provider registration
         if (tokenProviderFactory != null)
             services.AddSingleton(tokenProviderFactory);
         else
-            services.AddSingleton<IAccessTokenProvider>(_ => new EnvVarAccessTokenProvider("SPOTIFY_ACCESS_TOKEN"));
+            services.AddSingleton<IAccessTokenProvider>(_ => new Auth.EnvVarAccessTokenProvider("SPOTIFY_ACCESS_TOKEN"));
 
-        // HTTP pipeline
         services.AddSingleton<IRetryDelayStrategy, DefaultRetyDelayStrategy>();
         services.AddTransient<AuthDelegatingHandler>();
         services.AddTransient<RetryAfterDelegatingHandler>();
 
+        // Raw client still 
         services.AddHttpClient<RawSpotifyClient>((sp, http) =>
         {
             var opts = sp.GetRequiredService<IOptions<SpotifyClientOptions>>().Value;
@@ -57,8 +55,9 @@ public static class ServiceCollectionExtensions
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>()
         .AddHttpMessageHandler<RetryAfterDelegatingHandler>();
-        
-        services.AddHttpClient<SpotifyClient>((sp, http) =>
+
+        // Typed SpotifyClient exposed as ISpotifyClient
+        services.AddHttpClient<ISpotifyClient, SpotifyClient>((sp, http) =>
         {
             var opts = sp.GetRequiredService<IOptions<SpotifyClientOptions>>().Value;
             http.BaseAddress = new Uri(opts.BaseUrl, UriKind.Absolute);
@@ -67,8 +66,8 @@ public static class ServiceCollectionExtensions
         .AddHttpMessageHandler<AuthDelegatingHandler>()
         .AddHttpMessageHandler<RetryAfterDelegatingHandler>();
 
-        services.AddScoped<ISpotifyClient, SpotifyClient>();
-        
+        //services.AddScoped<ISpotifyClient, SpotifyClient>();
+
         return services;
     }
 }
