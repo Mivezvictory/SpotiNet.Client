@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-namespace SpotiNet.Client;
+namespace SpotiNet.Client.Models;
 
 /// <summary>
 /// Full response from Spotify's GET /me (Current User’s Profile).
@@ -94,103 +94,10 @@ public sealed class CurrentUserProfile
         DisplayName = DisplayName
     };
 
+    /// <summary>
+    /// Returns simplified UserProfile
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public CurrentUserProfileSimple Simple => ToSimple();
 }
-
-/// <summary>
-/// The user's explicit content settings.
-/// </summary>
-public sealed class ExplicitContentSettings
-{
-    /// <summary>
-    /// When true, explicit content should not be played.
-    /// </summary>
-    [JsonPropertyName("filter_enabled")]
-    public bool? FilterEnabled { get; set; }
-
-    /// <summary>
-    /// When true, the explicit content setting is locked and cannot be changed by the user.
-    /// </summary>
-    [JsonPropertyName("filter_locked")]
-    public bool? FilterLocked { get; set; }
-}
-
-/// <summary>
-/// Known external URLs for the user.
-/// </summary>
-public sealed class ExternalUrls
-{
-    /// <summary>
-    /// The Spotify URL for the user.
-    /// </summary>
-    [JsonPropertyName("spotify")]
-    public string? Spotify { get; set; }
-}
-
-/// <summary>
-/// Follower information for a user.
-/// </summary>
-public sealed class Followers
-{
-    /// <summary>
-    /// A link to the Web API endpoint returning the full result for the followers.
-    /// Spotify currently always returns null for this field.
-    /// </summary>
-    [JsonPropertyName("href")]
-    public string? Href { get; set; }
-
-    /// <summary>
-    /// The total number of followers.
-    /// </summary>
-    [JsonPropertyName("total")]
-    public int? Total { get; set; }
-}
-
-/// <summary>
-/// An image object (URL and dimensions).
-/// </summary>
-public sealed class ImageObject
-{
-    /// <summary>
-    /// The source URL of the image.
-    /// </summary>
-    [JsonPropertyName("url")]
-    public string? Url { get; set; }
-
-    /// <summary>
-    /// The image height in pixels. May be null.
-    /// </summary>
-    [JsonPropertyName("height")]
-    public int? Height { get; set; }
-
-    /// <summary>
-    /// The image width in pixels. May be null.
-    /// </summary>
-    [JsonPropertyName("width")]
-    public int? Width { get; set; }
-}
-
-/// <summary>
-/// Represents a simplified profile of the current user on Spotify.
-/// </summary>
-/// <remarks>This class provides basic information about the current user, including their Spotify ID and display
-/// name. It is typically used to retrieve or display user-specific data in applications interacting with the Spotify
-/// API.</remarks>
-public sealed class CurrentUserProfileSimple
-{
-    /// <summary>
-    /// The Spotify ID of current user
-    /// </summary>
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// The display name of current user
-    /// </summary>
-    [JsonPropertyName("display_name")]
-    public string? DisplayName { get; set; }
-
-}
-
 
