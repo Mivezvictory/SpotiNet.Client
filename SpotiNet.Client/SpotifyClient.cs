@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using SpotiNet.Client.Models;
 
 namespace SpotiNet.Client;
 

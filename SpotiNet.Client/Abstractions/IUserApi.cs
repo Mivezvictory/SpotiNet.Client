@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using SpotiNet.Client.Models;
 
 namespace SpotiNet.Client;
 
