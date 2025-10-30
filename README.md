@@ -79,4 +79,4 @@ Non-2xx results throw SpotifyApiException:
 
 - StatusCode (e.g., 401, 403, 429)
 - Message (Spotify’s error.message when available)
--  ResponseBody (raw response)
+- ResponseBody (raw response)
