@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SpotiNet.Client.Models;
+using System.Collections.Generic;
 
 namespace SpotiNet.Client;
 
@@ -58,8 +59,40 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
     async Task<CurrentUserProfile> IUsersApi.GetMeAsync(CancellationToken ct)
         => await SendAsync<CurrentUserProfile>(new(HttpMethod.Get, "me"), ct);
 
+    async Task<TopArtistsResponse> IUsersApi.GetUserTopArtistsAsync(
+        string? timeRange,
+        int? limit,
+        int? offset,
+        CancellationToken ct)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/artists?time_range={timeRange}&limit={limit}&offset={offset}");
+        return await SendAsync<TopArtistsResponse>(req, ct);
+    }
+
+    async     Task<TopTracksResponse> IUsersApi.GetUserTopTracksAsync(
+        string? timeRange,
+        int? limit,
+        int? offset,
+        CancellationToken ct)
+    {
+        
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/tracks?time_range={timeRange}&limit={limit}&offset={offset}");
+        return await SendAsync<TopTracksResponse>(req, ct);
+    }
+    
+    async Task<PublicUser> IUsersApi.GetUserAsync(
+        string userId,
+        CancellationToken ct)
+    => await SendAsync<PublicUser>(new(HttpMethod.Get, $"users/{userId}"), ct);
+
+
     // -------- Playlists ----------
-    async Task<Playlist> IPlaylistsApi.CreateAsync(string userId, string name, string? description, bool isPublic, CancellationToken ct)
+    async Task<Playlist> IPlaylistsApi.CreateAsync(
+        string userId,
+        string name,
+        string? description,
+        bool isPublic,
+        CancellationToken ct)
     {
         var payload = new { name, description, @public = isPublic };
         using var req = new HttpRequestMessage(HttpMethod.Post, $"users/{Uri.EscapeDataString(userId)}/playlists")
@@ -67,7 +100,10 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
         return await SendAsync<Playlist>(req, ct);
     }
 
-    async Task IPlaylistsApi.AddItemsAsync(string playlistId, System.Collections.Generic.IEnumerable<string> trackUris, CancellationToken ct)
+    async Task IPlaylistsApi.AddItemsAsync(
+        string playlistId,
+        IEnumerable<string> trackUris,
+        CancellationToken ct)
     {
         var payload = new { uris = System.Linq.Enumerable.ToArray(trackUris) };
         using var req = new HttpRequestMessage(HttpMethod.Post, $"playlists/{Uri.EscapeDataString(playlistId)}/tracks")

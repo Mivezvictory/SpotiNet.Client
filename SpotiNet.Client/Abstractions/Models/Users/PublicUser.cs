@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace SpotiNet.Client.Models;
 
@@ -15,6 +16,12 @@ public sealed class PublicUser
     [JsonPropertyName("external_urls")]
     public ExternalUrls? ExternalUrls { get; set; }
 
+    /// <summary>
+    /// Information about the user's followers.
+    /// </summary>
+    [JsonPropertyName("followers")]
+    public Followers? Followers { get; set; }
+
     /// <summary>API endpoint URL for this user.</summary>
     [JsonPropertyName("href")]
     public string? Href { get; set; }
@@ -22,6 +29,13 @@ public sealed class PublicUser
     /// <summary>The Spotify ID for the user.</summary>
     [JsonPropertyName("id")]
     public string? Id { get; set; }
+
+    /// <summary>
+    /// The user's profile images (usually multiple sizes).
+    /// </summary>
+    [JsonPropertyName("images")]
+    public List<ImageObject>? Images { get; set; }
+
 
     /// <summary>Object type: always "user".</summary>
     [JsonPropertyName("type")]
