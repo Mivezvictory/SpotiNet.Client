@@ -65,7 +65,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
         int? offset,
         CancellationToken ct)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/artists?time_range={Uri.EscapeDataString(timeRange)}&limit={limit}&offset={offset}");
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/artists?time_range={timeRange}&limit={limit}&offset={offset}");
         return await SendAsync<TopArtistsResponse>(req, ct);
     }
 
@@ -75,7 +75,8 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
         int? offset,
         CancellationToken ct)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/tracks?time_range={Uri.EscapeDataString(timeRange)}&limit={limit}&offset={offset}");
+        
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/tracks?time_range={timeRange}&limit={limit}&offset={offset}");
         return await SendAsync<TopTracksResponse>(req, ct);
     }
     

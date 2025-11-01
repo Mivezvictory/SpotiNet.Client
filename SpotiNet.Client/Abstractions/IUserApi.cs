@@ -9,6 +9,7 @@ namespace SpotiNet.Client;
 /// </summary>
 public interface IUsersApi
 {
+    
     /// <summary>
     /// Get /v1/me - current user profile (requires user token).
     /// Scopes: none for basic profile; add user-read-email if needed
@@ -26,7 +27,13 @@ public interface IUsersApi
     /// <param name="offset">(Optional) The idex of the first item to return. Default: 0</param>
     /// <param name="ct">CancellationToken</param>
     /// <returns></returns>
-    Task<TopArtistsResponse> GetUserTopArtistsAsync(string? timeRange = null, int? limit = null, int? offset = null, CancellationToken ct = default);
+    Task<TopArtistsResponse> GetUserTopArtistsAsync(
+        string? timeRange = "medium_term",
+        int? limit = 20,
+        int? offset = 0,
+        CancellationToken ct = default
+    );
+
     /// <summary>
     /// Get /v1/me/top/tracks -Get the current user's top artists
     /// Scopes:user-top-read
@@ -36,8 +43,12 @@ public interface IUsersApi
     /// <param name="offset">(Optional) The idex of the first item to return. Default: 0</param>
     /// <param name="ct">CancellationToken</param>
     /// <returns></returns>
-    Task<TopTracksResponse> GetUserTopTracksAsync(string? timeRange = null, int? limit = null, int? offset = null, CancellationToken ct = default);
-
+    Task<TopTracksResponse> GetUserTopTracksAsync(
+        string? timeRange = "medium_term",
+        int? limit = 20,
+        int? offset = 0,
+        CancellationToken ct = default
+    );
 
     /// <summary>
     /// Get /v1/users - Get public profiel information about a Spotify user
