@@ -14,4 +14,11 @@ public interface ISpotifyClient
     /// Playlists endpoints.
     /// </summary>
     IPlaylistsApi Playlists { get; }
+
+    /// <summary>
+    /// Search endpoints
+    /// </summary>
+    ISearchApi Search { get; }
+
+    
 }

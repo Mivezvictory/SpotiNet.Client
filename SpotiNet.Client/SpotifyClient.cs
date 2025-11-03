@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SpotiNet.Client.Models;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Linq;
+
 
 namespace SpotiNet.Client;
 
@@ -16,7 +19,7 @@ namespace SpotiNet.Client;
 /// Concrete implementation of ISpotifyClient and sub-APIs.
 /// Current capabilities - pipeline (auth + retries + error mapping).
 /// </summary>
-internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
+internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, ISearchApi
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _json;
@@ -34,6 +37,8 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
 
     public IUsersApi Users => this;
     public IPlaylistsApi Playlists => this;
+
+    public ISearchApi Search => this;
 
     // -------- Core send/deserialize ----------
     private async Task<T> SendAsync<T>(HttpRequestMessage req, CancellationToken ct)
@@ -69,7 +74,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
         return await SendAsync<TopArtistsResponse>(req, ct);
     }
 
-    async     Task<TopTracksResponse> IUsersApi.GetUserTopTracksAsync(
+    async Task<TopTracksResponse> IUsersApi.GetUserTopTracksAsync(
         string? timeRange,
         int? limit,
         int? offset,
@@ -110,4 +115,56 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi
         { Content = JsonContent.Create(payload) };
         _ = await SendAsync<JsonElement>(req, ct); // returns snapshot_id; not needed here
     }
+
+    // -------- Search ----------
+    private sealed record SearchTracksEnvelope(Paging<Track> Tracks);
+
+    
+    async IAsyncEnumerable<Track> ISearchApi.SearchTracksAsync(
+        string query,
+        int? limit,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        // Start with a relative URL; Spotify returns an absolute 'next'
+        string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}";
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        //string? previous = null;
+
+
+        while (!string.IsNullOrEmpty(url))
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            var env = await SendAsync<SearchTracksEnvelope>(req, ct);
+            var tracks = env.Tracks;
+            if (tracks?.Items is null || tracks.Items.Count == 0)
+                yield break;
+
+            foreach (var t in tracks.Items)
+            {
+                ct.ThrowIfCancellationRequested();
+                yield return t;
+            }
+
+            var next = string.IsNullOrEmpty(tracks.Next) ? null : tracks.Next;
+
+            if (next is null || !seen.Add(next))
+                yield break;
+
+            url = next;
+        }
+
+    }
+    
+    private static string Rel(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+
+        // If it's already an absolute URI, leave it alone (BaseAddress will be ignored).
+        if (Uri.TryCreate(path, UriKind.Absolute, out _)) return path;
+
+        // Otherwise ensure it's a clean relative segment (no leading slash).
+        return path.TrimStart('/');
+    }
+    //private async 
+
 }
