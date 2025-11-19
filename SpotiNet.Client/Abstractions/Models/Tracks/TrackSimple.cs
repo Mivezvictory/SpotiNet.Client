@@ -12,7 +12,7 @@ public sealed class TrackSimple
     /// The album on which the track appears (simplified album object).
     /// </summary>
     [JsonPropertyName("album")]
-    public Album? Album { get; set; }
+    public AlbumSimple? Album { get; set; }
 
     /// <summary>
     /// The artists who performed the track. Each artist is simplified.

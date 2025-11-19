@@ -55,8 +55,6 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
             throw new SpotifyApiException(res.StatusCode, msg, body);
         }
 
-        _log.LogDebug("Response body length: {Length} chars", body?.Length ?? 0);
-        
         var data = JsonSerializer.Deserialize<T>(body, _json);
         if (data is null)
             throw new SpotifyApiException(HttpStatusCode.InternalServerError, "Failed to deserialize Spotify response.", body);
@@ -204,10 +202,6 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                 using var req = new HttpRequestMessage(HttpMethod.Get, url);
                 var env = await SendAsync<SearchArtistsEnvelope>(req, ct);
                 var artists = env.Artists;
-                
-                _log.LogInformation("Artist search page: Total={Total}, Items={ItemCount}, Next={Next}", 
-                    artists?.Total, artists?.Items?.Count ?? 0, artists?.Next);
-                
                 return new Page<Artist>
                 {
                     Items = artists?.Items ?? new List<Artist>(),
@@ -391,35 +385,46 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         [EnumeratorCancellation] CancellationToken ct)
     {
         var seenTracks = new HashSet<T>();
-        //string? previous = null;
         string? url = initialUrl;
-        int? firstToal = null;
+        int? firstTotal = null;
         int stopAt = int.MaxValue;
 
         while (!string.IsNullOrEmpty(url))
         {
             var page = await fetchPage(url, ct);
+            
+            if (firstTotal is null)
+            {
+                firstTotal = page.Total ?? 0;
+                stopAt = Math.Min(Math.Max((int)firstTotal, 0), maxTotalCap);
+            }
+
             var items = page.Items;
+            
+            // If we've already retrieved all available items, stop
+            if (seenTracks.Count >= stopAt)
+                yield break;
+            
+            // If this page has no items, stop
             if (items is null || items.Count == 0)
                 yield break;
-
-            if (firstToal is null)
-            {
-                firstToal = page.Total ?? 0;
-                stopAt = Math.Min(Math.Max((int)firstToal, 0), maxTotalCap);
-            }
 
             int count = 0;
             foreach (var t in items)
             {
                 ct.ThrowIfCancellationRequested();
+                
+                // Don't yield more items than the total
+                if (seenTracks.Count >= stopAt)
+                    yield break;
+                    
                 yield return t;
                 seenTracks.Add(t);
                 count++;
             }
 
-            if (count == 0) yield break;
-            if (seenTracks.Count >= stopAt) yield break;
+            if (count == 0) 
+                yield break;
 
             var next = string.IsNullOrEmpty(page.Next) ? null : page.Next;
 

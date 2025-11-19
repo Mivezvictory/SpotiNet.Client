@@ -134,7 +134,7 @@ public sealed class Track
     /// </summary>
     public TrackSimple ToSimple() => new()
     {
-        Album = Album,
+        Album = Album!.ToSimple(),
         Artists = Artists,
         DurationMs = DurationMs,
         Id = Id,
