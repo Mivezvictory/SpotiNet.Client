@@ -11,6 +11,8 @@ using SpotiNet.Client.Models;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
 
 
 namespace SpotiNet.Client;
@@ -53,6 +55,8 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
             throw new SpotifyApiException(res.StatusCode, msg, body);
         }
 
+        _log.LogDebug("Response body length: {Length} chars", body?.Length ?? 0);
+        
         var data = JsonSerializer.Deserialize<T>(body, _json);
         if (data is null)
             throw new SpotifyApiException(HttpStatusCode.InternalServerError, "Failed to deserialize Spotify response.", body);
@@ -117,54 +121,313 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     }
 
     // -------- Search ----------
-    private sealed record SearchTracksEnvelope(Paging<Track> Tracks);
-
+    private sealed class SearchTracksEnvelope
+    {
+        [JsonPropertyName("tracks")]
+        public Paging<Track>? Tracks { get; set; }
+    }
     
+    private sealed class SearchArtistsEnvelope
+    {
+        [JsonPropertyName("artists")]
+        public Paging<Artist>? Artists { get; set; }
+    }
+
+
+
     async IAsyncEnumerable<Track> ISearchApi.SearchTracksAsync(
         string query,
         int? limit,
+        int? offset,
+        string? market,
+        string? includeExternal,
         [EnumeratorCancellation] CancellationToken ct)
     {
         // Start with a relative URL; Spotify returns an absolute 'next'
-        string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}";
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        //string? previous = null;
+        //string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}&offset={offset}";
+        string? url = BuildUrl(
+                "search",
+                ("q", query),
+                ("type", "track"),
+                ("limit", limit?.ToString()),
+                ("offset", offset?.ToString()),
+                ("market", market),
+                ("include_external", includeExternal)
+        );
 
+        await foreach (var t in StreamPagesAsync(
+            initialUrl: url,
+            fetchPage: async (url, token) =>
+            {
+                using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                var env = await SendAsync<SearchTracksEnvelope>(req, ct);
+                var tracks = env.Tracks;
+                return new Page<Track>
+                {
+                    Items = tracks.Items ?? new List<Track>(),
+                    Next = tracks.Next,
+                    Total = tracks.Total
+                };
+            },
+            1000,
+            ct
+            ))
+        {
+            yield return t;
+        } 
+    }
+
+    async IAsyncEnumerable<Artist> ISearchApi.SearchArtistsAsync(
+       string query,
+       int? limit,
+       int? offset,
+       string? market,
+       string? includeExternal,
+       [EnumeratorCancellation] CancellationToken ct)
+    {
+        // Start with a relative URL; Spotify returns an absolute 'next'
+        //string? url = $"search?q={Uri.EscapeDataString(query)}&type=artist&limit={limit}&offset={offset}";
+        string? url = BuildUrl(
+               "search",
+               ("q", query),
+               ("type", "artist"),
+               ("limit", limit?.ToString()),
+               ("offset", offset?.ToString()),
+               ("market", market),
+               ("include_external", includeExternal)
+        );
+
+        await foreach (var t in StreamPagesAsync(
+            initialUrl: url,
+            fetchPage: async (url, token) =>
+            {
+                using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                var env = await SendAsync<SearchArtistsEnvelope>(req, ct);
+                var artists = env.Artists;
+                
+                _log.LogInformation("Artist search page: Total={Total}, Items={ItemCount}, Next={Next}", 
+                    artists?.Total, artists?.Items?.Count ?? 0, artists?.Next);
+                
+                return new Page<Artist>
+                {
+                    Items = artists?.Items ?? new List<Artist>(),
+                    Next = artists?.Next,
+                    Total = artists?.Total
+                };
+            },
+            1000,
+            ct
+            ))
+        {
+            yield return t;
+        }
+    }
+
+    //// -------- Search ----------
+    //private sealed record SearchTracksEnvelope(Paging<Track> Track);
+    //private sealed record SearchArtistsEnvelope(Paging<Artist> Artist);
+    //private sealed record SearchAlbumsEnvelope(Paging<Album> Album);
+
+    //async IAsyncEnumerable<Track> ISearchApi.SearchTracksAsync(
+    //    string query,
+    //    int? limit,
+    //    int? offset,
+    //    string? market,
+    //    string? includeExternal,
+    //    [EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    // Start with a relative URL; Spotify returns an absolute 'next'
+    //    string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}&offset={offset}";
+    //    //string? url = BuildUrl(
+    //    //        "search",
+    //    //        ("q", query),
+    //    //        ("type", "track"),
+    //    //        ("limit", limit.ToString()),
+    //    //        ("offset", offset.ToString()),
+    //    //        ("market", market),
+    //    //        ("include_external", includeExternal)
+    //    //);
+
+    //    await foreach (var t in StreamPagesAsync(
+    //        initialUrl: url,
+    //        fetchPage: async (url, token) =>
+    //        {
+    //            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+    //            var env = await SendAsync<SearchTracksEnvelope>(req, ct);
+    //            var tracks = env.Track;
+    //            return new Page<Track>
+    //            {
+    //                Items = tracks.Items ?? new List<Track>(),
+    //                Next = tracks.Next,
+    //                Total = tracks.Total
+    //            };
+    //        },
+    //        1000,
+    //        ct
+    //        ))
+    //    {
+    //        yield return t;
+    //    }
+    //}
+
+    //async IAsyncEnumerable<Artist> ISearchApi.SearchArtistsAsync(
+    //   string query,
+    //   int? limit,
+    //   int? offset,
+    //   string? market,
+    //   string? includeExternal,
+    //   [EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    // Start with a relative URL; Spotify returns an absolute 'next'
+    //    //string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}&offset={offset}";
+    //    string? url = BuildUrl(
+    //            "search",
+    //            ("q", query),
+    //            ("type", "artist"),
+    //            ("limit", limit.ToString()),
+    //            ("offset", offset.ToString()),
+    //            ("market", market),
+    //            ("include_external", includeExternal)
+    //    );
+
+    //    await foreach (var t in StreamPagesAsync(
+    //        initialUrl: url,
+    //        fetchPage: async (url, token) =>
+    //        {
+    //            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+    //            var env = await SendAsync<SearchArtistsEnvelope>(req, ct);
+    //            var artists = env.Artist;
+    //            return new Page<Artist>
+    //            {
+    //                Items = artists.Items ?? new List<Artist>(),
+    //                Next = artists.Next,
+    //                Total = artists.Total
+    //            };
+    //        },
+    //        1000,
+    //        ct
+    //        ))
+    //    {
+    //        yield return t;
+    //    }
+    //}
+
+    //async IAsyncEnumerable<Album> ISearchApi.SearchAlbumsAsync(
+    //   string query,
+    //   int? limit,
+    //   int? offset,
+    //   string? market,
+    //   string? includeExternal,
+    //   [EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    // Start with a relative URL; Spotify returns an absolute 'next'
+    //    //string? url = $"search?q={Uri.EscapeDataString(query)}&type=track&limit={limit}&offset={offset}";
+    //    string? url = BuildUrl(
+    //            "search",
+    //            ("q", query),
+    //            ("type", "album"),
+    //            ("limit", limit.ToString()),
+    //            ("offset", offset.ToString()),
+    //            ("market", market),
+    //            ("include_external", includeExternal)
+    //    );
+
+    //    await foreach (var t in StreamPagesAsync(
+    //        initialUrl: url,
+    //        fetchPage: async (url, token) =>
+    //        {
+    //            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+    //            var env = await SendAsync<SearchAlbumsEnvelope>(req, ct);
+    //            var albums = env.Album;
+    //            return new Page<Album>
+    //            {
+    //                Items = albums.Items ?? new List<Album>(),
+    //                Next = albums.Next,
+    //                Total = albums.Total
+    //            };
+    //        },
+    //        1000,
+    //        ct
+    //        ))
+    //    {
+    //        yield return t;
+    //    }
+    //}
+
+    private static string BuildUrl(
+        string path,
+        params(string name, string? value)[] queryParameters)
+    {
+        var sb = new StringBuilder(path);
+        var first = true;
+
+        foreach(var (name, value) in queryParameters)
+        {
+            if (string.IsNullOrEmpty(value))
+                continue;
+            sb.Append(first ? '?' : '&');
+            first = false;
+
+            sb.Append(Uri.EscapeDataString(name));
+            sb.Append('=');
+            sb.Append(Uri.EscapeDataString(value));
+
+        }
+        return sb.ToString();
+    }
+
+    internal sealed class Page<T>
+    {
+        public required IReadOnlyList<T> Items { get; init; }
+        public string? Next { get; init; }
+        public int? Total { get; init; }
+    }
+
+
+    private async IAsyncEnumerable<T> StreamPagesAsync<T>(
+        string? initialUrl, 
+        Func<string, CancellationToken, Task<Page<T>>> fetchPage,
+        int maxTotalCap, 
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        var seenTracks = new HashSet<T>();
+        //string? previous = null;
+        string? url = initialUrl;
+        int? firstToal = null;
+        int stopAt = int.MaxValue;
 
         while (!string.IsNullOrEmpty(url))
         {
-            using var req = new HttpRequestMessage(HttpMethod.Get, url);
-            var env = await SendAsync<SearchTracksEnvelope>(req, ct);
-            var tracks = env.Tracks;
-            if (tracks?.Items is null || tracks.Items.Count == 0)
+            var page = await fetchPage(url, ct);
+            var items = page.Items;
+            if (items is null || items.Count == 0)
                 yield break;
 
-            foreach (var t in tracks.Items)
+            if (firstToal is null)
+            {
+                firstToal = page.Total ?? 0;
+                stopAt = Math.Min(Math.Max((int)firstToal, 0), maxTotalCap);
+            }
+
+            int count = 0;
+            foreach (var t in items)
             {
                 ct.ThrowIfCancellationRequested();
                 yield return t;
+                seenTracks.Add(t);
+                count++;
             }
 
-            var next = string.IsNullOrEmpty(tracks.Next) ? null : tracks.Next;
+            if (count == 0) yield break;
+            if (seenTracks.Count >= stopAt) yield break;
 
-            if (next is null || !seen.Add(next))
+            var next = string.IsNullOrEmpty(page.Next) ? null : page.Next;
+
+            if (next is null)
                 yield break;
 
             url = next;
         }
-
     }
-    
-    private static string Rel(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
-
-        // If it's already an absolute URI, leave it alone (BaseAddress will be ignored).
-        if (Uri.TryCreate(path, UriKind.Absolute, out _)) return path;
-
-        // Otherwise ensure it's a clean relative segment (no leading slash).
-        return path.TrimStart('/');
-    }
-    //private async 
 
 }
