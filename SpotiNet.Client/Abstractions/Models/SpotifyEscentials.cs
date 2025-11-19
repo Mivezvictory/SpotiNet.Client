@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace SpotiNet.Client.Models;
 
-// <summary>
+/// <summary>
 /// The user's explicit content settings.
-/// </summary>
+///</summary>
 public sealed class ExplicitContentSettings
 {
     /// <summary>

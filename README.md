@@ -1,7 +1,7 @@
 ## SpotiNet.Client
 SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs. 
 
-**What’s included**
+**What's included**
 - DI-first client with retries for `429` (honors `Retry-After`) + basic `5xx`
 - Typed APIs :
     - Users
@@ -11,7 +11,11 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
         - `Users.GetUserAsync(userId)`
     - Playlists
         - `Playlists.CreateAsync(userId, name, description?, isPublic?)`
-         - `Playlists.AddItemsAsync(playlistId, IEnumerable<string> trackUris)`
+        - `Playlists.AddItemsAsync(playlistId, IEnumerable<string> trackUris)`
+    - Search (streaming results with automatic pagination)
+        - `Search.SearchTracksAsync(query, limit?, offset?, market?, includeExternal?)`
+        - `Search.SearchArtistsAsync(query, limit?, offset?, market?, includeExternal?)`
+        - `Search.SearchAlbumsAsync(query, limit?, offset?, market?, includeExternal?)`
 - Clean errors via `SpotifyApiException` (status + message + raw body)
 
 **Tokens & scopes**
@@ -20,6 +24,7 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - `Users.GetMeAsync`: none for basic profile (add `user-read-email` if you need email & `user-read-private` if you need user country)
     - `Users.GetUserAsync`: `user-top-read`
     - `Playlists.CreateAsync` / `AddItemsAsync`: `playlist-modify-public` or `playlist-modify-private` (match `isPublic`)
+    - `Search.*`: works with both **user tokens** and **client-credentials** tokens
 
 ### Install
 
@@ -56,7 +61,29 @@ await api.Playlists.AddItemsAsync(playlist.Id, new[]
 });
 
 Console.WriteLine($"Playlist created: {playlist.Name} ({playlist.Id})");
+```
 
+**Search usage (streaming results)**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
+
+// Search for tracks - returns IAsyncEnumerable that automatically paginates
+await foreach (var track in api.Search.SearchTracksAsync("Bohemian Rhapsody", limit: 20))
+{
+    Console.WriteLine($"{track.Name} by {string.Join(", ", track.Artists?.Select(a => a.Name) ?? [])}");
+}
+
+// Search for artists
+await foreach (var artist in api.Search.SearchArtistsAsync("Queen"))
+{
+    Console.WriteLine($"{artist.Name} - Popularity: {artist.Popularity}");
+}
+
+// Search for albums
+await foreach (var album in api.Search.SearchAlbumsAsync("A Night at the Opera"))
+{
+    Console.WriteLine($"{album.Name} by {string.Join(", ", album.Artists?.Select(a => a.Name) ?? [])}");
+}
 ```
 
 **Supplying a user token**
