@@ -21,7 +21,7 @@ namespace SpotiNet.Client;
 /// Concrete implementation of ISpotifyClient and sub-APIs.
 /// Current capabilities - pipeline (auth + retries + error mapping).
 /// </summary>
-internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, IArtistsApi, IAlbumsApi, ISearchApi
+internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, IArtistsApi, IAlbumsApi, ITracksApi, ISearchApi
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _json;
@@ -41,6 +41,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     public IPlaylistsApi Playlists => this;
     public IArtistsApi Artists => this;
     public IAlbumsApi Albums => this;
+    public ITracksApi Tracks => this;
     public ISearchApi Search => this;
 
     // -------- Core send/deserialize ----------
@@ -203,6 +204,35 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     {
         [JsonPropertyName("albums")]
         public List<Album>? Albums { get; set; }
+    }
+
+    // -------- Tracks ----------
+    async Task<Track> ITracksApi.GetAsync(
+        string trackId,
+        string? market,
+        CancellationToken ct)
+    {
+        var url = BuildUrl($"tracks/{Uri.EscapeDataString(trackId)}", ("market", market));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        return await SendAsync<Track>(req, ct);
+    }
+
+    async Task<IReadOnlyList<Track>> ITracksApi.GetSeveralAsync(
+        IEnumerable<string> trackIds,
+        string? market,
+        CancellationToken ct)
+    {
+        var ids = string.Join(",", trackIds.Take(50)); // Spotify limits to 50 IDs for tracks
+        var url = BuildUrl("tracks", ("ids", ids), ("market", market));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        var envelope = await SendAsync<TracksEnvelope>(req, ct);
+        return envelope.Tracks ?? new List<Track>();
+    }
+
+    private sealed class TracksEnvelope
+    {
+        [JsonPropertyName("tracks")]
+        public List<Track>? Tracks { get; set; }
     }
 
     // -------- Search ----------

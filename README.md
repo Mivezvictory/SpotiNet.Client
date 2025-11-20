@@ -21,6 +21,9 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - Albums
         - `Albums.GetAsync(albumId, market?)`
         - `Albums.GetSeveralAsync(IEnumerable<string> albumIds, market?)`
+    - Tracks
+        - `Tracks.GetAsync(trackId, market?)`
+        - `Tracks.GetSeveralAsync(IEnumerable<string> trackIds, market?)`
     - Search (streaming results with automatic pagination)
         - `Search.SearchTracksAsync(query, limit?, offset?, market?, includeExternal?)`
         - `Search.SearchArtistsAsync(query, limit?, offset?, market?, includeExternal?)`
@@ -37,6 +40,7 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - `Playlists.GetCurrentUserPlaylistsAsync`: `playlist-read-private` for private playlists, `playlist-read-collaborative` for collaborative playlists
     - `Artists.*`: works with both **user tokens** and **client-credentials** tokens
     - `Albums.*`: works with both **user tokens** and **client-credentials** tokens
+    - `Tracks.*`: works with both **user tokens** and **client-credentials** tokens
     - `Search.*`: works with both **user tokens** and **client-credentials** tokens
 
 ### Install
@@ -139,6 +143,28 @@ var albums = await api.Albums.GetSeveralAsync(new[]
 foreach (var alb in albums)
 {
     Console.WriteLine($"{alb.Name} - Popularity: {alb.Popularity}");
+}
+```
+
+**Tracks usage**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
+
+// Get a single track
+var track = await api.Tracks.GetAsync("11dFghVXANMlKmJXsNCbNl"); // Cut to the Feeling by Carly Rae Jepsen
+Console.WriteLine($"{track.Name} by {string.Join(", ", track.Artists?.Select(a => a.Name) ?? [])}");
+Console.WriteLine($"Album: {track.Album?.Name}");
+Console.WriteLine($"Duration: {TimeSpan.FromMilliseconds(track.DurationMs ?? 0)}");
+
+// Get several tracks at once (up to 50)
+var tracks = await api.Tracks.GetSeveralAsync(new[]
+{
+    "11dFghVXANMlKmJXsNCbNl", // Cut to the Feeling
+    "3n3Ppam7vgaVa1iaRUc9Lp"  // Mr. Brightside
+});
+foreach (var t in tracks)
+{
+    Console.WriteLine($"{t.Name} - Popularity: {t.Popularity}");
 }
 ```
 
