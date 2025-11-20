@@ -5,18 +5,38 @@ using SpotiNet.Client.Models;
 
 namespace SpotiNet.Client;
 
-/// <summary>Playlists endpoints.</summary>
+/// <summary>
+/// Playlists endpoints.
+/// </summary>
 public interface IPlaylistsApi
 {
     /// <summary>
-    /// POST /v1/users/{user_id}/playlists — create a playlist.
-    /// Scopes: playlist-modify-public or playlist-modify-private.
+    /// POST /v1/users/{user_id}/playlists - Create a new playlist for a user.
+    /// Scopes: playlist-modify-public or playlist-modify-private (depending on isPublic parameter).
     /// </summary>
-    Task<Playlist> CreateAsync(string userId, string name, string? description = null, bool isPublic = false, CancellationToken ct = default);
+    /// <param name="userId">The user's Spotify user ID</param>
+    /// <param name="name">The name for the new playlist</param>
+    /// <param name="description">(optional) The playlist description as displayed in Spotify Clients and in the Web API</param>
+    /// <param name="isPublic">(optional) Whether the playlist will be public (true) or private (false). Default: false</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The newly created playlist object</returns>
+    Task<Playlist> CreateAsync(
+        string userId, 
+        string name, 
+        string? description = null, 
+        bool isPublic = false, 
+        CancellationToken ct = default);
 
     /// <summary>
-    /// POST /v1/playlists/{playlist_id}/tracks — add tracks by URI.
+    /// POST /v1/playlists/{playlist_id}/tracks - Add one or more items to a user's playlist.
     /// Scopes: playlist-modify-public or playlist-modify-private.
     /// </summary>
-    Task AddItemsAsync(string playlistId, IEnumerable<string> trackUris, CancellationToken ct = default);
+    /// <param name="playlistId">The Spotify ID of the playlist</param>
+    /// <param name="trackUris">A collection of Spotify URIs to add (e.g., "spotify:track:4iV5W9uYEdYUVa79Axb7Rh")</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A task representing the asynchronous operation</returns>
+    Task AddItemsAsync(
+        string playlistId, 
+        IEnumerable<string> trackUris, 
+        CancellationToken ct = default);
 }
