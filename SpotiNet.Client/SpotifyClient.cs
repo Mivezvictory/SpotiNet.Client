@@ -21,7 +21,7 @@ namespace SpotiNet.Client;
 /// Concrete implementation of ISpotifyClient and sub-APIs.
 /// Current capabilities - pipeline (auth + retries + error mapping).
 /// </summary>
-internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, IArtistsApi, ISearchApi
+internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, IArtistsApi, IAlbumsApi, ISearchApi
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _json;
@@ -40,6 +40,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     public IUsersApi Users => this;
     public IPlaylistsApi Playlists => this;
     public IArtistsApi Artists => this;
+    public IAlbumsApi Albums => this;
     public ISearchApi Search => this;
 
     // -------- Core send/deserialize ----------
@@ -173,6 +174,35 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     {
         [JsonPropertyName("artists")]
         public List<Artist>? Artists { get; set; }
+    }
+
+    // -------- Albums ----------
+    async Task<Album> IAlbumsApi.GetAsync(
+        string albumId,
+        string? market,
+        CancellationToken ct)
+    {
+        var url = BuildUrl($"albums/{Uri.EscapeDataString(albumId)}", ("market", market));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        return await SendAsync<Album>(req, ct);
+    }
+
+    async Task<IReadOnlyList<Album>> IAlbumsApi.GetSeveralAsync(
+        IEnumerable<string> albumIds,
+        string? market,
+        CancellationToken ct)
+    {
+        var ids = string.Join(",", albumIds.Take(20)); // Spotify limits to 20 IDs for albums
+        var url = BuildUrl("albums", ("ids", ids), ("market", market));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        var envelope = await SendAsync<AlbumsEnvelope>(req, ct);
+        return envelope.Albums ?? new List<Album>();
+    }
+
+    private sealed class AlbumsEnvelope
+    {
+        [JsonPropertyName("albums")]
+        public List<Album>? Albums { get; set; }
     }
 
     // -------- Search ----------

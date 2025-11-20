@@ -18,6 +18,9 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - Artists
         - `Artists.GetAsync(artistId)`
         - `Artists.GetSeveralAsync(IEnumerable<string> artistIds)`
+    - Albums
+        - `Albums.GetAsync(albumId, market?)`
+        - `Albums.GetSeveralAsync(IEnumerable<string> albumIds, market?)`
     - Search (streaming results with automatic pagination)
         - `Search.SearchTracksAsync(query, limit?, offset?, market?, includeExternal?)`
         - `Search.SearchArtistsAsync(query, limit?, offset?, market?, includeExternal?)`
@@ -33,6 +36,7 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - `Playlists.GetAsync`: none for public playlists, `playlist-read-private` for private playlists
     - `Playlists.GetCurrentUserPlaylistsAsync`: `playlist-read-private` for private playlists, `playlist-read-collaborative` for collaborative playlists
     - `Artists.*`: works with both **user tokens** and **client-credentials** tokens
+    - `Albums.*`: works with both **user tokens** and **client-credentials** tokens
     - `Search.*`: works with both **user tokens** and **client-credentials** tokens
 
 ### Install
@@ -113,6 +117,28 @@ var artists = await api.Artists.GetSeveralAsync(new[]
 foreach (var a in artists)
 {
     Console.WriteLine($"{a.Name} - Popularity: {a.Popularity}");
+}
+```
+
+**Albums usage**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
+
+// Get a single album
+var album = await api.Albums.GetAsync("4aawyAB9vmqN3uQ7FjRGTy"); // Global Warming by Pitbull
+Console.WriteLine($"{album.Name} by {string.Join(", ", album.Artists?.Select(a => a.Name) ?? [])}");
+Console.WriteLine($"Release Date: {album.ReleaseDate}");
+Console.WriteLine($"Total Tracks: {album.Tracks?.Total}");
+
+// Get several albums at once (up to 20)
+var albums = await api.Albums.GetSeveralAsync(new[]
+{
+    "4aawyAB9vmqN3uQ7FjRGTy", // Global Warming
+    "382ObEPsp2rxGrnsizN5TX"  // 1989 (Taylor's Version)
+});
+foreach (var alb in albums)
+{
+    Console.WriteLine($"{alb.Name} - Popularity: {alb.Popularity}");
 }
 ```
 
