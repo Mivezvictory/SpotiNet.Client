@@ -15,6 +15,9 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
         - `Playlists.RemoveItemsAsync(playlistId, IEnumerable<string> trackUris)`
         - `Playlists.GetAsync(playlistId, market?)`
         - `Playlists.GetCurrentUserPlaylistsAsync(limit?, offset?)`
+    - Artists
+        - `Artists.GetAsync(artistId)`
+        - `Artists.GetSeveralAsync(IEnumerable<string> artistIds)`
     - Search (streaming results with automatic pagination)
         - `Search.SearchTracksAsync(query, limit?, offset?, market?, includeExternal?)`
         - `Search.SearchArtistsAsync(query, limit?, offset?, market?, includeExternal?)`
@@ -29,6 +32,7 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - `Playlists.CreateAsync` / `AddItemsAsync` / `RemoveItemsAsync`: `playlist-modify-public` or `playlist-modify-private` (match `isPublic`)
     - `Playlists.GetAsync`: none for public playlists, `playlist-read-private` for private playlists
     - `Playlists.GetCurrentUserPlaylistsAsync`: `playlist-read-private` for private playlists, `playlist-read-collaborative` for collaborative playlists
+    - `Artists.*`: works with both **user tokens** and **client-credentials** tokens
     - `Search.*`: works with both **user tokens** and **client-credentials** tokens
 
 ### Install
@@ -89,6 +93,27 @@ await api.Playlists.RemoveItemsAsync(playlist.Id, new[]
 {
     "spotify:track:5BLrEOEDKoDDg5T8PzdIHN"
 });
+```
+
+**Artists usage**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
+
+// Get a single artist
+var artist = await api.Artists.GetAsync("0TnOYISbd1XYRBk9myaseg"); // Pitbull
+Console.WriteLine($"{artist.Name} - Followers: {artist.Followers?.Total}");
+Console.WriteLine($"Genres: {string.Join(", ", artist.Genres ?? [])}");
+
+// Get several artists at once (up to 50)
+var artists = await api.Artists.GetSeveralAsync(new[]
+{
+    "0TnOYISbd1XYRBk9myaseg", // Pitbull
+    "06HL4z0CvFAxyc27GXpf02"  // Taylor Swift
+});
+foreach (var a in artists)
+{
+    Console.WriteLine($"{a.Name} - Popularity: {a.Popularity}");
+}
 ```
 
 **Search usage (streaming results)**

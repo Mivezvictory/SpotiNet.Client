@@ -21,7 +21,7 @@ namespace SpotiNet.Client;
 /// Concrete implementation of ISpotifyClient and sub-APIs.
 /// Current capabilities - pipeline (auth + retries + error mapping).
 /// </summary>
-internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, ISearchApi
+internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, IArtistsApi, ISearchApi
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _json;
@@ -39,7 +39,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
 
     public IUsersApi Users => this;
     public IPlaylistsApi Playlists => this;
-
+    public IArtistsApi Artists => this;
     public ISearchApi Search => this;
 
     // -------- Core send/deserialize ----------
@@ -147,6 +147,32 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         var url = BuildUrl("me/playlists", ("limit", limit?.ToString()), ("offset", offset?.ToString()));
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         return await SendAsync<Paging<PlaylistSimple>>(req, ct);
+    }
+
+    // -------- Artists ----------
+    async Task<Artist> IArtistsApi.GetAsync(
+        string artistId,
+        CancellationToken ct)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"artists/{Uri.EscapeDataString(artistId)}");
+        return await SendAsync<Artist>(req, ct);
+    }
+
+    async Task<IReadOnlyList<Artist>> IArtistsApi.GetSeveralAsync(
+        IEnumerable<string> artistIds,
+        CancellationToken ct)
+    {
+        var ids = string.Join(",", artistIds.Take(50)); // Spotify limits to 50 IDs
+        var url = BuildUrl("artists", ("ids", ids));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        var envelope = await SendAsync<ArtistsEnvelope>(req, ct);
+        return envelope.Artists ?? new List<Artist>();
+    }
+
+    private sealed class ArtistsEnvelope
+    {
+        [JsonPropertyName("artists")]
+        public List<Artist>? Artists { get; set; }
     }
 
     // -------- Search ----------
