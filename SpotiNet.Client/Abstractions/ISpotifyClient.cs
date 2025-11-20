@@ -26,6 +26,11 @@ public interface ISpotifyClient
     IAlbumsApi Albums { get; }
 
     /// <summary>
+    /// Tracks endpoints.
+    /// </summary>
+    ITracksApi Tracks { get; }
+
+    /// <summary>
     /// Search endpoints
     /// </summary>
     ISearchApi Search { get; }
