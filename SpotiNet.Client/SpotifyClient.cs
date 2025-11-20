@@ -118,6 +118,37 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         _ = await SendAsync<JsonElement>(req, ct); // returns snapshot_id; not needed here
     }
 
+    async Task IPlaylistsApi.RemoveItemsAsync(
+        string playlistId,
+        IEnumerable<string> trackUris,
+        CancellationToken ct)
+    {
+        var payload = new { tracks = trackUris.Select(uri => new { uri }).ToArray() };
+        using var req = new HttpRequestMessage(HttpMethod.Delete, $"playlists/{Uri.EscapeDataString(playlistId)}/tracks")
+        { Content = JsonContent.Create(payload) };
+        _ = await SendAsync<JsonElement>(req, ct); // returns snapshot_id; not needed here
+    }
+
+    async Task<Playlist> IPlaylistsApi.GetAsync(
+        string playlistId,
+        string? market,
+        CancellationToken ct)
+    {
+        var url = BuildUrl($"playlists/{Uri.EscapeDataString(playlistId)}", ("market", market));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        return await SendAsync<Playlist>(req, ct);
+    }
+
+    async Task<Paging<PlaylistSimple>> IPlaylistsApi.GetCurrentUserPlaylistsAsync(
+        int? limit,
+        int? offset,
+        CancellationToken ct)
+    {
+        var url = BuildUrl("me/playlists", ("limit", limit?.ToString()), ("offset", offset?.ToString()));
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        return await SendAsync<Paging<PlaylistSimple>>(req, ct);
+    }
+
     // -------- Search ----------
     private sealed class SearchTracksEnvelope
     {
