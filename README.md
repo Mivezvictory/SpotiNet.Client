@@ -6,8 +6,8 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
 - Typed APIs :
     - Users
         - `Users.GetMeAsync()`
-        - `Users.GetUserTopArtistsAsync(timeRange = "medium_term, limt = 20, offset =0)`
-        - `Users.GetUserTopTracksAsync(timeRange = "medium_term, limt = 20, offset =0)`
+        - `Users.GetUserTopArtistsAsync(timeRange?, limt?, offset?)`
+        - `Users.GetUserTopTracksAsync(timeRange?, limt?, offset?)`
         - `Users.GetUserAsync(userId)`
     - Playlists
         - `Playlists.CreateAsync(userId, name, description?, isPublic?)`
