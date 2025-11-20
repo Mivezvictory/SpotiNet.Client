@@ -16,7 +16,7 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum number of results to return in each item type. Default: 20</param>
+    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>
@@ -35,7 +35,7 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum number of results to return in each item type. Default: 20</param>
+    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>
@@ -54,7 +54,7 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum number of results to return in each item type. Default: 20</param>
+    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>

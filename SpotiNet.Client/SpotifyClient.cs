@@ -290,7 +290,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                     Total = tracks.Total
                 };
             },
-            1000,
+            limit ?? 50,
             ct
             ))
         {
@@ -332,7 +332,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                     Total = artists?.Total
                 };
             },
-            1000,
+            limit ?? 50,
             ct
             ))
         {
@@ -374,7 +374,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                    Total = albums?.Total
                };
            },
-           1000,
+           limit ?? 50,
            ct
            ))
        {
