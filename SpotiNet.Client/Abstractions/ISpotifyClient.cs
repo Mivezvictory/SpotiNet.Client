@@ -16,6 +16,11 @@ public interface ISpotifyClient
     IPlaylistsApi Playlists { get; }
 
     /// <summary>
+    /// Artists endpoints.
+    /// </summary>
+    IArtistsApi Artists { get; }
+
+    /// <summary>
     /// Search endpoints
     /// </summary>
     ISearchApi Search { get; }
