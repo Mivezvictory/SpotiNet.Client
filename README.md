@@ -12,6 +12,9 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
     - Playlists
         - `Playlists.CreateAsync(userId, name, description?, isPublic?)`
         - `Playlists.AddItemsAsync(playlistId, IEnumerable<string> trackUris)`
+        - `Playlists.RemoveItemsAsync(playlistId, IEnumerable<string> trackUris)`
+        - `Playlists.GetAsync(playlistId, market?)`
+        - `Playlists.GetCurrentUserPlaylistsAsync(limit?, offset?)`
     - Search (streaming results with automatic pagination)
         - `Search.SearchTracksAsync(query, limit?, offset?, market?, includeExternal?)`
         - `Search.SearchArtistsAsync(query, limit?, offset?, market?, includeExternal?)`
@@ -23,7 +26,9 @@ SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs.
 - Scopes:
     - `Users.GetMeAsync`: none for basic profile (add `user-read-email` if you need email & `user-read-private` if you need user country)
     - `Users.GetUserAsync`: `user-top-read`
-    - `Playlists.CreateAsync` / `AddItemsAsync`: `playlist-modify-public` or `playlist-modify-private` (match `isPublic`)
+    - `Playlists.CreateAsync` / `AddItemsAsync` / `RemoveItemsAsync`: `playlist-modify-public` or `playlist-modify-private` (match `isPublic`)
+    - `Playlists.GetAsync`: none for public playlists, `playlist-read-private` for private playlists
+    - `Playlists.GetCurrentUserPlaylistsAsync`: `playlist-read-private` for private playlists, `playlist-read-collaborative` for collaborative playlists
     - `Search.*`: works with both **user tokens** and **client-credentials** tokens
 
 ### Install
@@ -61,6 +66,29 @@ await api.Playlists.AddItemsAsync(playlist.Id, new[]
 });
 
 Console.WriteLine($"Playlist created: {playlist.Name} ({playlist.Id})");
+```
+
+**Playlist management usage**
+```csharp
+var api = services.GetRequiredService<ISpotifyClient>();
+
+// Get a specific playlist
+var playlist = await api.Playlists.GetAsync("37i9dQZF1DXcBWIGoYBM5M");
+Console.WriteLine($"Playlist: {playlist.Name} by {playlist.Owner?.DisplayName}");
+Console.WriteLine($"Tracks: {playlist.Tracks?.Total}");
+
+// Get all current user's playlists (paginated)
+var myPlaylists = await api.Playlists.GetCurrentUserPlaylistsAsync(limit: 50);
+foreach (var pl in myPlaylists.Items ?? [])
+{
+    Console.WriteLine($"{pl.Name} ({pl.Id})");
+}
+
+// Remove tracks from a playlist
+await api.Playlists.RemoveItemsAsync(playlist.Id, new[]
+{
+    "spotify:track:5BLrEOEDKoDDg5T8PzdIHN"
+});
 ```
 
 **Search usage (streaming results)**
