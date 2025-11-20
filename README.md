@@ -108,15 +108,15 @@ await api.Playlists.RemoveItemsAsync(playlist.Id, new[]
 var api = services.GetRequiredService<ISpotifyClient>();
 
 // Get a single artist
-var artist = await api.Artists.GetAsync("0TnOYISbd1XYRBk9myaseg"); // Pitbull
+var artist = await api.Artists.GetAsync("2QsynagSdAqZj3U9HgDzjD"); // Bob Marley
 Console.WriteLine($"{artist.Name} - Followers: {artist.Followers?.Total}");
 Console.WriteLine($"Genres: {string.Join(", ", artist.Genres ?? [])}");
 
 // Get several artists at once (up to 50)
 var artists = await api.Artists.GetSeveralAsync(new[]
 {
-    "0TnOYISbd1XYRBk9myaseg", // Pitbull
-    "06HL4z0CvFAxyc27GXpf02"  // Taylor Swift
+    "2QsynagSdAqZj3U9HgDzjD", // Bob Marley
+    "2VAvhf61HjWOeE3NPa7Msw"  // Fela Kuti
 });
 foreach (var a in artists)
 {
@@ -129,7 +129,7 @@ foreach (var a in artists)
 var api = services.GetRequiredService<ISpotifyClient>();
 
 // Get a single album
-var album = await api.Albums.GetAsync("4aawyAB9vmqN3uQ7FjRGTy"); // Global Warming by Pitbull
+var album = await api.Albums.GetAsync("4LH4d3cOWNNsVw41Gqt2kv"); // The Dark Side of the Moon by Pink Floyd
 Console.WriteLine($"{album.Name} by {string.Join(", ", album.Artists?.Select(a => a.Name) ?? [])}");
 Console.WriteLine($"Release Date: {album.ReleaseDate}");
 Console.WriteLine($"Total Tracks: {album.Tracks?.Total}");
@@ -137,8 +137,8 @@ Console.WriteLine($"Total Tracks: {album.Tracks?.Total}");
 // Get several albums at once (up to 20)
 var albums = await api.Albums.GetSeveralAsync(new[]
 {
-    "4aawyAB9vmqN3uQ7FjRGTy", // Global Warming
-    "382ObEPsp2rxGrnsizN5TX"  // 1989 (Taylor's Version)
+    "4LH4d3cOWNNsVw41Gqt2kv", // The Dark Side of the Moon
+    "4R2kfJ5lfYTmPAV9jkMWTd"  // Graceland by Paul Simon
 });
 foreach (var alb in albums)
 {
@@ -151,7 +151,7 @@ foreach (var alb in albums)
 var api = services.GetRequiredService<ISpotifyClient>();
 
 // Get a single track
-var track = await api.Tracks.GetAsync("11dFghVXANMlKmJXsNCbNl"); // Cut to the Feeling by Carly Rae Jepsen
+var track = await api.Tracks.GetAsync("3ZOEjWhUKEahPYCdALWEAC"); // Water No Get Enemy by Fela Kuti
 Console.WriteLine($"{track.Name} by {string.Join(", ", track.Artists?.Select(a => a.Name) ?? [])}");
 Console.WriteLine($"Album: {track.Album?.Name}");
 Console.WriteLine($"Duration: {TimeSpan.FromMilliseconds(track.DurationMs ?? 0)}");
@@ -159,8 +159,8 @@ Console.WriteLine($"Duration: {TimeSpan.FromMilliseconds(track.DurationMs ?? 0)}
 // Get several tracks at once (up to 50)
 var tracks = await api.Tracks.GetSeveralAsync(new[]
 {
-    "11dFghVXANMlKmJXsNCbNl", // Cut to the Feeling
-    "3n3Ppam7vgaVa1iaRUc9Lp"  // Mr. Brightside
+    "3ZOEjWhUKEahPYCdALWEAC", // Water No Get Enemy
+    "3DXncPQOG4VBw3QHh3S817"  // Zombie by Fela Kuti
 });
 foreach (var t in tracks)
 {
@@ -173,19 +173,19 @@ foreach (var t in tracks)
 var api = services.GetRequiredService<ISpotifyClient>();
 
 // Search for tracks - returns IAsyncEnumerable that automatically paginates
-await foreach (var track in api.Search.SearchTracksAsync("Bohemian Rhapsody", limit: 20))
+await foreach (var track in api.Search.SearchTracksAsync("No Woman No Cry", limit: 20))
 {
     Console.WriteLine($"{track.Name} by {string.Join(", ", track.Artists?.Select(a => a.Name) ?? [])}");
 }
 
 // Search for artists
-await foreach (var artist in api.Search.SearchArtistsAsync("Queen"))
+await foreach (var artist in api.Search.SearchArtistsAsync("Bob Marley"))
 {
     Console.WriteLine($"{artist.Name} - Popularity: {artist.Popularity}");
 }
 
 // Search for albums
-await foreach (var album in api.Search.SearchAlbumsAsync("A Night at the Opera"))
+await foreach (var album in api.Search.SearchAlbumsAsync("Legend"))
 {
     Console.WriteLine($"{album.Name} by {string.Join(", ", album.Artists?.Select(a => a.Name) ?? [])}");
 }
