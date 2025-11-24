@@ -1,5 +1,5 @@
 ## SpotiNet.Client
-SpotiNet.Client is an intuitive .NET C# library to access the Spotify REST APIs. 
+SpotiNet.Client is an intuitive .NET C# library to access the Spotify(unofficial) REST APIs. 
 
 **What's included**
 - DI-first client with retries for `429` (honors `Retry-After`) + basic `5xx`
