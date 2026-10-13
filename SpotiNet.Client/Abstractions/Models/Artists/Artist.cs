@@ -15,13 +15,15 @@ public sealed class Artist
     public ExternalUrls? ExternalUrls { get; set; }
 
     /// <summary>
-    /// Information about the artist’s followers (total count, etc.).
+    /// Information about the artist's followers (total count, etc.).
+    /// Marked deprecated by Spotify as of Feb 2026; the Web API no longer supports this and it will always be null.
     /// </summary>
     [JsonPropertyName("followers")]
     public Followers? Followers { get; set; }
 
     /// <summary>
     /// Genres associated with the artist. Not necessarily comprehensive.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("genres")]
     public List<string>? Genres { get; set; }
@@ -52,6 +54,7 @@ public sealed class Artist
 
     /// <summary>
     /// Artist popularity (0–100), with 100 being most popular.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("popularity")]
     public int? Popularity { get; set; }

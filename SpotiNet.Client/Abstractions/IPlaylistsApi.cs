@@ -11,37 +11,40 @@ namespace SpotiNet.Client;
 public interface IPlaylistsApi
 {
     /// <summary>
-    /// POST /v1/users/{user_id}/playlists - Create a new playlist for a user.
+    /// POST /v1/me/playlists - Create a new playlist for the current user.
+    /// Spotify's API only supports creating playlists for the token owner now
+    /// (the old per-user path was removed in the Feb 2026 API changes).
     /// Scopes: playlist-modify-public or playlist-modify-private (depending on isPublic parameter).
     /// </summary>
-    /// <param name="userId">The user's Spotify user ID</param>
     /// <param name="name">The name for the new playlist</param>
     /// <param name="description">(optional) The playlist description as displayed in Spotify Clients and in the Web API</param>
     /// <param name="isPublic">(optional) Whether the playlist will be public (true) or private (false). Default: false</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The newly created playlist object</returns>
     Task<Playlist> CreateAsync(
-        string userId, 
-        string name, 
-        string? description = null, 
-        bool isPublic = false, 
+        string name,
+        string? description = null,
+        bool isPublic = false,
         CancellationToken ct = default);
 
     /// <summary>
-    /// POST /v1/playlists/{playlist_id}/tracks - Add one or more items to a user's playlist.
+    /// POST /v1/playlists/{playlist_id}/items - Add one or more items to a user's playlist.
     /// Scopes: playlist-modify-public or playlist-modify-private.
     /// </summary>
     /// <param name="playlistId">The Spotify ID of the playlist</param>
     /// <param name="trackUris">A collection of Spotify URIs to add (e.g., "spotify:track:4iV5W9uYEdYUVa79Axb7Rh")</param>
+    /// <param name="position">(optional) Zero-based index to insert the items at. Items are appended to the end when omitted.</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>A task representing the asynchronous operation</returns>
     Task AddItemsAsync(
-        string playlistId, 
-        IEnumerable<string> trackUris, 
+        string playlistId,
+        IEnumerable<string> trackUris,
+        int? position = null,
         CancellationToken ct = default);
 
     /// <summary>
-    /// DELETE /v1/playlists/{playlist_id}/tracks - Remove one or more items from a user's playlist.
+    /// DELETE /v1/playlists/{playlist_id}/items - Remove one or more items from a user's playlist.
+    /// Note: despite the path moving from "tracks" to "items", the request body still uses a "tracks" key.
     /// Scopes: playlist-modify-public or playlist-modify-private.
     /// </summary>
     /// <param name="playlistId">The Spotify ID of the playlist</param>

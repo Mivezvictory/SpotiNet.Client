@@ -16,7 +16,10 @@ public sealed class Album
     [JsonPropertyName("total_tracks")]
     public int? TotalTracks { get; set; }
 
-    /// <summary>ISO 3166-1 alpha-2 market codes where the album is available.</summary>
+    /// <summary>
+    /// ISO 3166-1 alpha-2 market codes where the album is available.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
+    /// </summary>
     [JsonPropertyName("available_markets")]
     public List<string>? AvailableMarkets { get; set; }
 
@@ -80,11 +83,17 @@ public sealed class Album
     [JsonPropertyName("genres")]
     public List<string>? Genres { get; set; }
 
-    /// <summary>The label associated with the album.</summary>
+    /// <summary>
+    /// The label associated with the album.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
+    /// </summary>
     [JsonPropertyName("label")]
     public string? Label { get; set; }
 
-    /// <summary>Album popularity (0–100), 100 = most popular.</summary>
+    /// <summary>
+    /// Album popularity (0–100), 100 = most popular.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
+    /// </summary>
     [JsonPropertyName("popularity")]
     public int? Popularity { get; set; }
 

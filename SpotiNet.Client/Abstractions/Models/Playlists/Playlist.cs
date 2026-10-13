@@ -77,9 +77,10 @@ public sealed class Playlist
 
     /// <summary>
     /// The tracks (and episodes) in the playlist as a paging container.
+    /// Renamed from "tracks" to "items" in Spotify's Feb 2026 API changes.
     /// </summary>
-    [JsonPropertyName("tracks")]
-    public Paging<PlaylistItem>? Tracks { get; set; }
+    [JsonPropertyName("items")]
+    public Paging<PlaylistItem>? Items { get; set; }
 
     /// <summary>
     /// Object type: always "playlist".

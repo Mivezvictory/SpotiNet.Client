@@ -88,23 +88,16 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         using var req = new HttpRequestMessage(HttpMethod.Get, $"me/top/tracks?time_range={timeRange}&limit={limit}&offset={offset}");
         return await SendAsync<TopTracksResponse>(req, ct);
     }
-    
-    async Task<PublicUser> IUsersApi.GetUserAsync(
-        string userId,
-        CancellationToken ct)
-    => await SendAsync<PublicUser>(new(HttpMethod.Get, $"users/{userId}"), ct);
-
 
     // -------- Playlists ----------
     async Task<Playlist> IPlaylistsApi.CreateAsync(
-        string userId,
         string name,
         string? description,
         bool isPublic,
         CancellationToken ct)
     {
         var payload = new { name, description, @public = isPublic };
-        using var req = new HttpRequestMessage(HttpMethod.Post, $"users/{Uri.EscapeDataString(userId)}/playlists")
+        using var req = new HttpRequestMessage(HttpMethod.Post, "me/playlists")
         { Content = JsonContent.Create(payload) };
         return await SendAsync<Playlist>(req, ct);
     }
@@ -112,10 +105,11 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
     async Task IPlaylistsApi.AddItemsAsync(
         string playlistId,
         IEnumerable<string> trackUris,
+        int? position,
         CancellationToken ct)
     {
-        var payload = new { uris = System.Linq.Enumerable.ToArray(trackUris) };
-        using var req = new HttpRequestMessage(HttpMethod.Post, $"playlists/{Uri.EscapeDataString(playlistId)}/tracks")
+        var payload = new { uris = System.Linq.Enumerable.ToArray(trackUris), position };
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"playlists/{Uri.EscapeDataString(playlistId)}/items")
         { Content = JsonContent.Create(payload) };
         _ = await SendAsync<JsonElement>(req, ct); // returns snapshot_id; not needed here
     }
@@ -125,8 +119,9 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         IEnumerable<string> trackUris,
         CancellationToken ct)
     {
+        // Body key stays "tracks" even though the path moved to "/items".
         var payload = new { tracks = trackUris.Select(uri => new { uri }).ToArray() };
-        using var req = new HttpRequestMessage(HttpMethod.Delete, $"playlists/{Uri.EscapeDataString(playlistId)}/tracks")
+        using var req = new HttpRequestMessage(HttpMethod.Delete, $"playlists/{Uri.EscapeDataString(playlistId)}/items")
         { Content = JsonContent.Create(payload) };
         _ = await SendAsync<JsonElement>(req, ct); // returns snapshot_id; not needed here
     }
@@ -160,23 +155,6 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         return await SendAsync<Artist>(req, ct);
     }
 
-    async Task<IReadOnlyList<Artist>> IArtistsApi.GetSeveralAsync(
-        IEnumerable<string> artistIds,
-        CancellationToken ct)
-    {
-        var ids = string.Join(",", artistIds.Take(50)); // Spotify limits to 50 IDs
-        var url = BuildUrl("artists", ("ids", ids));
-        using var req = new HttpRequestMessage(HttpMethod.Get, url);
-        var envelope = await SendAsync<ArtistsEnvelope>(req, ct);
-        return envelope.Artists ?? new List<Artist>();
-    }
-
-    private sealed class ArtistsEnvelope
-    {
-        [JsonPropertyName("artists")]
-        public List<Artist>? Artists { get; set; }
-    }
-
     // -------- Albums ----------
     async Task<Album> IAlbumsApi.GetAsync(
         string albumId,
@@ -186,24 +164,6 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         var url = BuildUrl($"albums/{Uri.EscapeDataString(albumId)}", ("market", market));
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         return await SendAsync<Album>(req, ct);
-    }
-
-    async Task<IReadOnlyList<Album>> IAlbumsApi.GetSeveralAsync(
-        IEnumerable<string> albumIds,
-        string? market,
-        CancellationToken ct)
-    {
-        var ids = string.Join(",", albumIds.Take(20)); // Spotify limits to 20 IDs for albums
-        var url = BuildUrl("albums", ("ids", ids), ("market", market));
-        using var req = new HttpRequestMessage(HttpMethod.Get, url);
-        var envelope = await SendAsync<AlbumsEnvelope>(req, ct);
-        return envelope.Albums ?? new List<Album>();
-    }
-
-    private sealed class AlbumsEnvelope
-    {
-        [JsonPropertyName("albums")]
-        public List<Album>? Albums { get; set; }
     }
 
     // -------- Tracks ----------
@@ -217,25 +177,11 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
         return await SendAsync<Track>(req, ct);
     }
 
-    async Task<IReadOnlyList<Track>> ITracksApi.GetSeveralAsync(
-        IEnumerable<string> trackIds,
-        string? market,
-        CancellationToken ct)
-    {
-        var ids = string.Join(",", trackIds.Take(50)); // Spotify limits to 50 IDs for tracks
-        var url = BuildUrl("tracks", ("ids", ids), ("market", market));
-        using var req = new HttpRequestMessage(HttpMethod.Get, url);
-        var envelope = await SendAsync<TracksEnvelope>(req, ct);
-        return envelope.Tracks ?? new List<Track>();
-    }
-
-    private sealed class TracksEnvelope
-    {
-        [JsonPropertyName("tracks")]
-        public List<Track>? Tracks { get; set; }
-    }
-
     // -------- Search ----------
+    /// <summary>
+    /// Spotify's own per-request page cap for search results (lowered from 50 to 10 in the Feb 2026 API changes).
+    /// </summary>
+    private const int MaxSearchPageSize = 10;
     private sealed class SearchTracksEnvelope
     {
         [JsonPropertyName("tracks")]
@@ -270,7 +216,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                 "search",
                 ("q", query),
                 ("type", "track"),
-                ("limit", limit?.ToString()),
+                ("limit", Math.Min(limit ?? 5, MaxSearchPageSize).ToString()),
                 ("offset", offset?.ToString()),
                 ("market", market),
                 ("include_external", includeExternal)
@@ -290,7 +236,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                     Total = tracks.Total
                 };
             },
-            limit ?? 50,
+            limit ?? 5,
             ct
             ))
         {
@@ -312,7 +258,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                "search",
                ("q", query),
                ("type", "artist"),
-               ("limit", limit?.ToString()),
+               ("limit", Math.Min(limit ?? 5, MaxSearchPageSize).ToString()),
                ("offset", offset?.ToString()),
                ("market", market),
                ("include_external", includeExternal)
@@ -332,7 +278,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                     Total = artists?.Total
                 };
             },
-            limit ?? 50,
+            limit ?? 5,
             ct
             ))
         {
@@ -354,8 +300,8 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                "search",
                ("q", query),
                ("type", "album"),
-               ("limit", limit.ToString()),
-               ("offset", offset.ToString()),
+               ("limit", Math.Min(limit ?? 5, MaxSearchPageSize).ToString()),
+               ("offset", offset?.ToString()),
                ("market", market),
                ("include_external", includeExternal)
        );
@@ -374,7 +320,7 @@ internal sealed class SpotifyClient : ISpotifyClient, IUsersApi, IPlaylistsApi, 
                    Total = albums?.Total
                };
            },
-           limit ?? 50,
+           limit ?? 5,
            ct
            ))
        {
