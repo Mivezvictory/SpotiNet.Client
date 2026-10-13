@@ -49,13 +49,4 @@ public interface IUsersApi
         int? offset = 0,
         CancellationToken ct = default
     );
-
-    /// <summary>
-    /// Get /v1/users - Get public profiel information about a Spotify user
-    /// Scopes: none
-    /// </summary>
-    /// <param name="userId">The Users Spotify user ID</param>
-    /// <param name="ct">CancellationToken</param>
-    /// <returns></returns>
-    Task<PublicUser> GetUserAsync(string userId, CancellationToken ct = default);
 }

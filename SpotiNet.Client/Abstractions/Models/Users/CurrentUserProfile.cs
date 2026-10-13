@@ -8,8 +8,15 @@ namespace SpotiNet.Client.Models;
 public sealed class CurrentUserProfile
 {
     /// <summary>
+    /// Immutable pseudoanonymous identifier for the account. Added by Spotify in the Feb 2026 API changes.
+    /// </summary>
+    [JsonPropertyName("account_id")]
+    public string? AccountId { get; set; }
+
+    /// <summary>
     /// The country of the user as an ISO 3166-1 alpha-2 code.
     /// Present only when the app has the <c>user-read-private</c> scope.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("country")]
     public string? Country { get; set; }
@@ -23,6 +30,7 @@ public sealed class CurrentUserProfile
     /// <summary>
     /// The user's email address (unverified).
     /// Present only when the app has the <c>user-read-email</c> scope.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("email")]
     public string? Email { get; set; }
@@ -30,6 +38,7 @@ public sealed class CurrentUserProfile
     /// <summary>
     /// The user's explicit content settings.
     /// Present only when the app has the <c>user-read-private</c> scope.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("explicit_content")]
     public ExplicitContentSettings? ExplicitContent { get; set; }
@@ -42,6 +51,7 @@ public sealed class CurrentUserProfile
 
     /// <summary>
     /// Information about the user's followers.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("followers")]
     public Followers? Followers { get; set; }
@@ -67,6 +77,7 @@ public sealed class CurrentUserProfile
     /// <summary>
     /// The user's Spotify subscription level: "premium", "free", etc.
     /// Present only when the app has the <c>user-read-private</c> scope.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("product")]
     public string? Product { get; set; }

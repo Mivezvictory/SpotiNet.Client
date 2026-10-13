@@ -27,8 +27,8 @@ public sealed class PlaylistItem
     public bool? IsLocal { get; set; }
 
     /// <summary>
-    /// The track for this item, when the item is a track. Will be null if the item is an episode or was removed.
+    /// The track or episode for this item. Renamed from "track" to "item" in Spotify's Feb 2026 API changes.
     /// </summary>
-    [JsonPropertyName("track")]
-    public TrackOrEpisode? Track { get; set; }
+    [JsonPropertyName("item")]
+    public TrackOrEpisode? Item { get; set; }
 }

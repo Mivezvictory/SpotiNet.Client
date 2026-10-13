@@ -16,13 +16,13 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
+    /// <param name="limit">(optional) The total number of results you want across all pages. Default: 5 (matches Spotify's own default). Spotify's per-request page cap dropped from 50 to 10, so requesting more than 10 now triggers additional page fetches internally instead of a single request.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>
     IAsyncEnumerable<Track> SearchTracksAsync(
         string query,
-        int? limit = 20,
+        int? limit = 5,
         int? offset = 0,
         string? market = null,
         string? includeExternal = null,
@@ -35,13 +35,13 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
+    /// <param name="limit">(optional) The total number of results you want across all pages. Default: 5 (matches Spotify's own default). Spotify's per-request page cap dropped from 50 to 10, so requesting more than 10 now triggers additional page fetches internally instead of a single request.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>
     IAsyncEnumerable<Artist> SearchArtistsAsync(
         string query,
-        int? limit = 20,
+        int? limit = 5,
         int? offset = 0,
         string? market = null,
         string? includeExternal = null,
@@ -54,13 +54,13 @@ public interface ISearchApi
     /// <param name="query">Your search query</param>
     /// <param name="market">(optional) An ISO 3166-1 alpha-2 country code to specify available content.</param>
     /// <param name="includeExternal">(optional) Signals that the client can play externally hosted audio content, and marks the content as playable in the response. </param>
-    /// <param name="limit">(optional) The maximum total number of results to return (0-50). Default: 20. Note: Results are fetched in pages but limited to this total.</param>
+    /// <param name="limit">(optional) The total number of results you want across all pages. Default: 5 (matches Spotify's own default). Spotify's per-request page cap dropped from 50 to 10, so requesting more than 10 now triggers additional page fetches internally instead of a single request.</param>
     /// <param name="offset">(optional) The index of the first result to return. Default: 0</param>
     /// <param name="ct"></param>
     /// <returns></returns>
     IAsyncEnumerable<Album> SearchAlbumsAsync(
        string query,
-       int? limit = 20,
+       int? limit = 5,
        int? offset = 0,
        string? market = null,
        string? includeExternal = null,

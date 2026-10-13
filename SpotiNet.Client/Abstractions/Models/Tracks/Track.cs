@@ -21,6 +21,7 @@ public sealed class Track
 
     /// <summary>
     /// Markets where the track is available, as ISO 3166-1 alpha-2 codes.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("available_markets")]
     public List<string>? AvailableMarkets { get; set; }
@@ -75,6 +76,7 @@ public sealed class Track
 
     /// <summary>
     /// Link to the original track if this is a relinked version.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("linked_from")]
     public TrackLink? LinkedFrom { get; set; }
@@ -93,12 +95,14 @@ public sealed class Track
 
     /// <summary>
     /// Track popularity (0–100), with 100 being most popular.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("popularity")]
     public int? Popularity { get; set; }
 
     /// <summary>
     /// A short (typically 30s) preview URL for the track, if available.
+    /// Marked deprecated by Spotify as of Feb 2026; still returned but may be removed in the future.
     /// </summary>
     [JsonPropertyName("preview_url")]
     public string? PreviewUrl { get; set; }
